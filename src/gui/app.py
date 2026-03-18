@@ -4,12 +4,11 @@ import mss
 import numpy as np
 import threading
 import time
+import winsound
 import json
 import os
 from datetime import datetime
 from PIL import Image
-
-import simpleaudio as sa
 
 from src.core import setup_logger, OCRProcessor, validate_config, get_monitor_info
 from src.core.region_selector import RegionSelector
@@ -99,19 +98,6 @@ class ScreenCheckerApp:
             self.sound_label.config(text=os.path.basename(self.sound_file), fg="green")
         ttk.Button(sound_frame, text="Выбрать", command=self.select_sound, width=10).pack(side=tk.LEFT, padx=5)
         ttk.Button(sound_frame, text="Тест", command=self.test_sound, width=6).pack(side=tk.LEFT, padx=2)
-        
-        ttk.Separator(sound_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=10)
-        
-        volume_frame = ttk.Frame(sound_frame)
-        volume_frame.pack(side=tk.LEFT, padx=5)
-        ttk.Label(volume_frame, text="Громкость:", font=("Segoe UI", 9)).pack(side=tk.LEFT)
-        self.volume_var = tk.DoubleVar(value=1.0)
-        self.volume_slider = ttk.Scale(volume_frame, from_=0.1, to=5.0, orient=tk.HORIZONTAL,
-                                       variable=self.volume_var, length=80,
-                                       command=lambda v: self.on_volume_change(v))
-        self.volume_slider.pack(side=tk.LEFT, padx=5)
-        self.volume_label = tk.Label(volume_frame, text="1.0x", font=("Segoe UI", 9), width=5)
-        self.volume_label.pack(side=tk.LEFT)
         
         ttk.Separator(sound_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=10)
         
@@ -248,16 +234,11 @@ class ScreenCheckerApp:
         Image.fromarray(img_array).save(filename)
         return filename
     
-    def on_volume_change(self, value=None):
-        if value is None:
-            value = self.volume_var.get()
-        self.volume_label.config(text=f"{float(value):.1f}x")
-    
     def test_sound(self):
         if not self.sound_file or not os.path.exists(self.sound_file):
             self.log_message("Сначала выберите звуковой файл", "yellow")
             return
-        self.log_message(f"Тест звука: громкость={self.volume_var.get():.1f}x, повторы={self.repeat_var.get()}")
+        self.log_message(f"Тест звука: повторы={self.repeat_var.get()}")
         self.play_sound()
     
     def play_sound(self):
@@ -268,25 +249,10 @@ class ScreenCheckerApp:
     
     def _play_sound_thread(self, repetitions):
         try:
-            import audioop
-            import wave
-            
-            volume = self.volume_var.get()
-            
-            with wave.open(self.sound_file, 'rb') as wf:
-                sample_width = wf.getsampwidth()
-                rate = wf.getframerate()
-                n_frames = wf.getnframes()
-                audio_data = wf.readframes(n_frames)
-            
-            if volume != 1.0:
-                audio_data = audioop.mul(audio_data, sample_width, volume)
-            
             for i in range(repetitions):
-                play_obj = sa.play_buffer(audio_data, 2, sample_width, rate)
-                play_obj.wait_done()
+                winsound.PlaySound(self.sound_file, winsound.SND_FILENAME)
                 if i < repetitions - 1:
-                    time.sleep(0.3)
+                    time.sleep(0.5)
         except Exception as e:
             pass
     
