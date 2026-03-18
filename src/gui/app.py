@@ -16,8 +16,9 @@ class ScreenCheckerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Screen Checker")
-        self.root.geometry("500x400")
-        self.root.resizable(False, False)
+        self.root.geometry("500x350")
+        self.root.minsize(400, 300)
+        self.root.resizable(True, True)
         
         self.logger = setup_logger()
         self.ocr = OCRProcessor()
@@ -40,33 +41,36 @@ class ScreenCheckerApp:
             self.config = json.load(f)
     
     def create_widgets(self):
-        main_frame = ttk.Frame(self.root, padding="20")
+        main_frame = ttk.Frame(self.root, padding="15")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        ttk.Label(main_frame, text="Монитор:", font=("Segoe UI", 10)).grid(
-            row=0, column=0, sticky=tk.W, pady=8)
+        top_frame = ttk.Frame(main_frame)
+        top_frame.pack(fill=tk.X, pady=5)
+        
+        ttk.Label(top_frame, text="Монитор:", font=("Segoe UI", 10)).grid(
+            row=0, column=0, sticky=tk.W, pady=5, padx=(0, 5))
         self.monitor_var = tk.StringVar(value="1")
         self.monitor_combo = ttk.Combobox(
-            main_frame, textvariable=self.monitor_var, width=15, state="readonly")
-        self.monitor_combo.grid(row=0, column=1, sticky=tk.W, pady=8)
+            top_frame, textvariable=self.monitor_var, width=15, state="readonly")
+        self.monitor_combo.grid(row=0, column=1, sticky=tk.W, pady=5)
         
-        ttk.Label(main_frame, text="Интервал (сек):", font=("Segoe UI", 10)).grid(
-            row=1, column=0, sticky=tk.W, pady=8)
+        ttk.Label(top_frame, text="Интервал (сек):", font=("Segoe UI", 10)).grid(
+            row=1, column=0, sticky=tk.W, pady=5, padx=(0, 5))
         self.interval_var = tk.StringVar(value=str(self.config.get("default_interval", 5)))
-        interval_entry = ttk.Entry(main_frame, textvariable=self.interval_var, width=18)
-        interval_entry.grid(row=1, column=1, sticky=tk.W, pady=8)
+        interval_entry = ttk.Entry(top_frame, textvariable=self.interval_var, width=18)
+        interval_entry.grid(row=1, column=1, sticky=tk.W, pady=5)
         
-        ttk.Label(main_frame, text="Текст для поиска:", font=("Segoe UI", 10)).grid(
-            row=2, column=0, sticky=tk.NW, pady=8)
-        self.search_text_widget = tk.Text(main_frame, width=30, height=4, font=("Segoe UI", 10))
-        self.search_text_widget.grid(row=2, column=1, sticky=tk.W, pady=8)
+        ttk.Label(top_frame, text="Текст для поиска:", font=("Segoe UI", 10)).grid(
+            row=2, column=0, sticky=tk.W, pady=5, padx=(0, 5))
+        self.search_text_widget = tk.Text(top_frame, width=30, height=2, font=("Segoe UI", 10))
+        self.search_text_widget.grid(row=2, column=1, sticky=tk.W, pady=5)
         
         self.status_label = ttk.Label(
             main_frame, text="Готов к работе", font=("Segoe UI", 10, "bold"))
-        self.status_label.grid(row=3, column=0, columnspan=2, pady=15)
+        self.status_label.pack(pady=10)
         
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=4, column=0, columnspan=2, pady=10)
+        button_frame.pack(pady=5)
         
         self.start_btn = ttk.Button(
             button_frame, text="Старт", command=self.start_monitoring, width=12)
@@ -78,14 +82,17 @@ class ScreenCheckerApp:
         
         self.stats_label = ttk.Label(
             main_frame, text="Сканирований: 0 | Найдено: 0", font=("Segoe UI", 9))
-        self.stats_label.grid(row=5, column=0, columnspan=2, pady=10)
+        self.stats_label.pack(pady=5)
         
-        self.log_text = tk.Text(main_frame, width=55, height=8, state="disabled",
+        log_frame = ttk.Frame(main_frame)
+        log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        
+        self.log_text = tk.Text(log_frame, height=5, state="disabled",
                                  font=("Consolas", 9))
-        self.log_text.grid(row=6, column=0, columnspan=2, pady=10)
+        self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
-        scrollbar = ttk.Scrollbar(main_frame, command=self.log_text.yview)
-        scrollbar.grid(row=6, column=2, sticky=tk.NS)
+        scrollbar = ttk.Scrollbar(log_frame, command=self.log_text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.log_text.config(yscrollcommand=scrollbar.set)
     
     def enumerate_monitors(self):
@@ -120,8 +127,13 @@ class ScreenCheckerApp:
         return filename
     
     def play_sound(self):
+        import os
         try:
-            winsound.PlaySound(self.config["sound_file"], winsound.SND_FILENAME)
+            sound_path = self.config["sound_file"]
+            if not os.path.isabs(sound_path):
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                sound_path = os.path.join(base_dir, sound_path)
+            winsound.PlaySound(sound_path, winsound.SND_FILENAME)
         except Exception as e:
             self.logger.error(f"Ошибка воспроизведения звука: {e}")
     
