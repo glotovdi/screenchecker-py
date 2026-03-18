@@ -3,14 +3,16 @@ import os
 import sys
 
 def check_config():
-    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    config_path = os.path.join(script_dir, "data", "config.json")
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_path = os.path.join(base_path, "..", "data", "config.json")
+    config_path = os.path.normpath(config_path)
     
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
     except Exception as e:
         print(f'[ОШИБКА] Не удалось прочитать config.json: {e}')
+        print(f'  Попытка: {config_path}')
         sys.exit(1)
     
     errors = []
