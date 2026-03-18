@@ -15,34 +15,32 @@ class OCRProcessor:
     def __init__(self):
         self.config = load_config()
         pytesseract.pytesseract.tesseract_cmd = self.config["tesseract_path"]
-        self.tesseract_config = self.config.get("ocr_config", "--oem 3 --psm 6")
-        self.scale = self.config.get("image_scale", 1.5)
-        self.min_conf = self.config.get("min_confidence", 60)
+        self.tesseract_config = self.config.get("ocr_config", "--oem 3 --psm 7")
+        self.scale = self.config.get("image_scale", 2.0)
     
     def preprocess(self, img_array):
         gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
         
-        scale = int(100 * self.scale)
         processed = cv2.resize(gray, None, fx=self.scale, fy=self.scale, 
                               interpolation=cv2.INTER_CUBIC)
         
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
         processed = clahe.apply(processed)
         
-        _, binary = cv2.threshold(processed, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        
         kernel = np.ones((1, 1), np.uint8)
-        binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+        processed = cv2.morphologyEx(processed, cv2.MORPH_CLOSE, kernel)
         
-        return binary
+        denoised = cv2.fastNlMeansDenoising(processed, None, 10, 7, 21)
+        
+        return denoised
     
     def extract_text(self, img_array):
         processed = self.preprocess(img_array)
         
         text = pytesseract.image_to_string(
             processed,
-            lang='rus+eng',
-            config=self.tesseract_config
+            lang='rus',
+            config='--oem 3 --psm 7 -c tessedit_char_whitelist=АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя0123456789 .,!?:-'
         )
         
         return text.strip()
@@ -54,7 +52,32 @@ class OCRProcessor:
             return False, ""
         
         found = search_text.lower() in text.lower()
-        return found, text[:200]
+        return found, text[:500]
+    
+    def debug_ocr(self, img_array, search_text):
+        processed = self.preprocess(img_array)
+        
+        text = pytesseract.image_to_string(
+            processed,
+            lang='rus',
+            config='--oem 3 --psm 7'
+        )
+        
+        data = pytesseract.image_to_data(
+            processed,
+            lang='rus',
+            config='--oem 3 --psm 7',
+            output_type=pytesseract.Output.DICT
+        )
+        
+        confidence = [int(c) for c in data['conf'] if int(c) > 0]
+        avg_conf = sum(confidence) / len(confidence) if confidence else 0
+        
+        return {
+            'text': text.strip(),
+            'avg_confidence': avg_conf,
+            'search_found': search_text.lower() in text.lower()
+        }
 
 
 def validate_config():
@@ -63,9 +86,6 @@ def validate_config():
     
     if not os.path.exists(config["tesseract_path"]):
         errors.append(f"Tesseract не найден: {config['tesseract_path']}")
-    
-    if not os.path.exists(config["sound_file"]):
-        errors.append(f"Звуковой файл не найден: {config['sound_file']}")
     
     os.makedirs(config.get("screenshots_dir", "screenshots"), exist_ok=True)
     os.makedirs(config.get("log_dir", "logs"), exist_ok=True)
