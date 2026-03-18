@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 from PIL import Image
 
-from src.core import setup_logger, OCRProcessor, validate_config
+from src.core import setup_logger, OCRProcessor, validate_config, get_monitor_info
 from src.core.region_selector import RegionSelector
 
 
@@ -155,10 +155,15 @@ class ScreenCheckerApp:
         except:
             monitor_num = 1
         
+        monitor_info = get_monitor_info(monitor_num)
+        if not monitor_info:
+            messagebox.showerror("Ошибка", "Не удалось получить информацию о мониторе")
+            return
+        
         self.root.withdraw()
         time.sleep(0.2)
         
-        selector = RegionSelector(monitor_num)
+        selector = RegionSelector(monitor_info)
         region = selector.get_region()
         
         self.root.deiconify()
@@ -167,7 +172,7 @@ class ScreenCheckerApp:
         if region and region['width'] > 10 and region['height'] > 10:
             self.region = region
             self.region_label.config(
-                text=f"Область: x={region['x']}, y={region['y']}, {region['width']}x{region['height']}",
+                text=f"Область: {region['width']}x{region['height']} (x={region['x']}, y={region['y']})",
                 fg="green"
             )
             self.log_message(f"Выбрана область: {region['width']}x{region['height']}", "yellow")
