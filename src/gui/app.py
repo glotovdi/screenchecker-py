@@ -4,11 +4,12 @@ import mss
 import numpy as np
 import threading
 import time
-import winsound
 import json
 import os
 from datetime import datetime
 from PIL import Image
+
+import simpleaudio as sa
 
 from src.core import setup_logger, OCRProcessor, validate_config, get_monitor_info
 from src.core.region_selector import RegionSelector
@@ -262,15 +263,32 @@ class ScreenCheckerApp:
     def play_sound(self):
         if not self.sound_file or not os.path.exists(self.sound_file):
             return
+        repetitions = self.repeat_var.get()
+        threading.Thread(target=self._play_sound_thread, args=(repetitions,), daemon=True).start()
+    
+    def _play_sound_thread(self, repetitions):
         try:
-            repetitions = self.repeat_var.get()
+            import audioop
+            import wave
             
-            for _ in range(repetitions):
-                winsound.PlaySound(self.sound_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
-                time.sleep(0.3)
+            volume = self.volume_var.get()
             
+            with wave.open(self.sound_file, 'rb') as wf:
+                sample_width = wf.getsampwidth()
+                rate = wf.getframerate()
+                n_frames = wf.getnframes()
+                audio_data = wf.readframes(n_frames)
+            
+            if volume != 1.0:
+                audio_data = audioop.mul(audio_data, sample_width, volume)
+            
+            for i in range(repetitions):
+                play_obj = sa.play_buffer(audio_data, 2, sample_width, rate)
+                play_obj.wait_done()
+                if i < repetitions - 1:
+                    time.sleep(0.3)
         except Exception as e:
-            self.logger.error(f"Ошибка воспроизведения звука: {e}")
+            pass
     
     def capture_region(self, region):
         with mss.mss() as sct:
