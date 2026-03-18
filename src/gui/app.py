@@ -4,13 +4,11 @@ import mss
 import numpy as np
 import threading
 import time
+import winsound
 import json
 import os
 from datetime import datetime
 from PIL import Image
-
-import pygame
-pygame.mixer.init()
 
 from src.core import setup_logger, OCRProcessor, validate_config, get_monitor_info
 from src.core.region_selector import RegionSelector
@@ -99,6 +97,7 @@ class ScreenCheckerApp:
         if self.sound_file and os.path.exists(self.sound_file):
             self.sound_label.config(text=os.path.basename(self.sound_file), fg="green")
         ttk.Button(sound_frame, text="Выбрать", command=self.select_sound, width=10).pack(side=tk.LEFT, padx=5)
+        ttk.Button(sound_frame, text="Тест", command=self.test_sound, width=6).pack(side=tk.LEFT, padx=2)
         
         ttk.Separator(sound_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=10)
         
@@ -106,12 +105,22 @@ class ScreenCheckerApp:
         volume_frame.pack(side=tk.LEFT, padx=5)
         ttk.Label(volume_frame, text="Громкость:", font=("Segoe UI", 9)).pack(side=tk.LEFT)
         self.volume_var = tk.DoubleVar(value=1.0)
-        self.volume_slider = ttk.Scale(volume_frame, from_=0.5, to=5.0, orient=tk.HORIZONTAL,
-                                       variable=self.volume_var, length=100,
+        self.volume_slider = ttk.Scale(volume_frame, from_=0.1, to=5.0, orient=tk.HORIZONTAL,
+                                       variable=self.volume_var, length=80,
                                        command=lambda v: self.on_volume_change(v))
         self.volume_slider.pack(side=tk.LEFT, padx=5)
         self.volume_label = tk.Label(volume_frame, text="1.0x", font=("Segoe UI", 9), width=5)
         self.volume_label.pack(side=tk.LEFT)
+        
+        ttk.Separator(sound_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=10)
+        
+        repeat_frame = ttk.Frame(sound_frame)
+        repeat_frame.pack(side=tk.LEFT, padx=5)
+        ttk.Label(repeat_frame, text="Повторы:", font=("Segoe UI", 9)).pack(side=tk.LEFT)
+        self.repeat_var = tk.IntVar(value=1)
+        repeat_spin = ttk.Spinbox(repeat_frame, from_=1, to=10, width=5,
+                                   textvariable=self.repeat_var)
+        repeat_spin.pack(side=tk.LEFT, padx=5)
         
         self.status_label = ttk.Label(
             main_frame, text="Готов к работе", font=("Segoe UI", 10, "bold"))
@@ -241,19 +250,24 @@ class ScreenCheckerApp:
     def on_volume_change(self, value=None):
         if value is None:
             value = self.volume_var.get()
-        self.volume_label.config(text=f"{value:.1f}x")
+        self.volume_label.config(text=f"{float(value):.1f}x")
+    
+    def test_sound(self):
+        if not self.sound_file or not os.path.exists(self.sound_file):
+            self.log_message("Сначала выберите звуковой файл", "yellow")
+            return
+        self.log_message(f"Тест звука: громкость={self.volume_var.get():.1f}x, повторы={self.repeat_var.get()}")
+        self.play_sound()
     
     def play_sound(self):
         if not self.sound_file or not os.path.exists(self.sound_file):
             return
         try:
-            volume = self.volume_var.get()
+            repetitions = self.repeat_var.get()
             
-            sound = pygame.mixer.Sound(self.sound_file)
-            sound.set_volume(min(1.0, volume))
-            
-            repetitions = max(1, int(volume))
-            sound.play(repetitions=repetitions - 1)
+            for _ in range(repetitions):
+                winsound.PlaySound(self.sound_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
+                time.sleep(0.3)
             
         except Exception as e:
             self.logger.error(f"Ошибка воспроизведения звука: {e}")
