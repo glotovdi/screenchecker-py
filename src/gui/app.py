@@ -34,7 +34,9 @@ class ScreenCheckerApp:
         self.enumerate_monitors()
     
     def load_config(self):
-        with open("data/config.json", "r", encoding="utf-8") as f:
+        import os
+        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "config.json")
+        with open(config_path, "r", encoding="utf-8") as f:
             self.config = json.load(f)
     
     def create_widgets(self):
@@ -110,8 +112,10 @@ class ScreenCheckerApp:
         self.stats_label.config(text=f"Сканирований: {self.scan_count} | Найдено: {self.found_count}")
     
     def save_screenshot(self, img_array):
+        import os
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"data/{self.config['screenshots_dir']}/found_{timestamp}.png"
+        os.makedirs(self.config['screenshots_dir'], exist_ok=True)
+        filename = f"{self.config['screenshots_dir']}\\found_{timestamp}.png"
         Image.fromarray(img_array).save(filename)
         return filename
     

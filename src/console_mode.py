@@ -66,11 +66,11 @@ class ConsoleMode:
     def save_screenshot(self, img_array):
         from PIL import Image
         config = self.ocr.config
-        screenshots_dir = f"data/{config.get('screenshots_dir', 'screenshots')}"
+        screenshots_dir = config.get('screenshots_dir', 'data/screenshots')
         os.makedirs(screenshots_dir, exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{screenshots_dir}/found_{timestamp}.png"
+        filename = f"{screenshots_dir}\\found_{timestamp}.png"
         Image.fromarray(img_array).save(filename)
         return filename
     
