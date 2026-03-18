@@ -3,7 +3,8 @@ import os
 import sys
 
 def check_config():
-    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "config.json")
+    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_path = os.path.join(script_dir, "data", "config.json")
     
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
