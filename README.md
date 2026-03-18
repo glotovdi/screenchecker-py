@@ -36,9 +36,17 @@ screenchecker-py/
 Скачайте и установите Tesseract с официального репозитория:
 - https://github.com/UB-Mannheim/tesseract/wiki
 
-При установке выберите русский языковой пакет (Russian).
+### 2. Установка русского языкового пакета
 
-### 2. Установка Python зависимостей
+Скачайте файл `rus.traineddata`:
+- **Прямая ссылка:** https://github.com/tesseract-ocr/tessdata/raw/main/rus.traineddata
+
+После скачивания поместите файл в папку `tessdata`:
+```
+C:\Program Files\Tesseract-OCR\tessdata\rus.traineddata
+```
+
+### 3. Установка Python зависимостей
 
 Запустите командный файл:
 ```cmd
@@ -50,20 +58,19 @@ install.bat
 pip install -r requirements.txt
 ```
 
-### 3. Настройка конфигурации
+### 4. Настройка конфигурации
 
 Откройте файл `data/config.json` и укажите пути:
 
 ```json
 {
     "tesseract_path": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
-    "sound_file": "assets\\sounds\\sound.wav",
     "screenshots_dir": "data\\screenshots",
     "log_dir": "data\\logs",
     "default_interval": 5,
-    "ocr_config": "--oem 3 --psm 6",
-    "image_scale": 1.5,
-    "min_confidence": 60
+    "ocr_config": "--oem 3 --psm 7",
+    "image_scale": 2.0,
+    "sound_file": ""
 }
 ```
 
@@ -74,17 +81,17 @@ pip install -r requirements.txt
 | `screenshots_dir` | Папка для сохранения скриншотов | `data\screenshots` |
 | `log_dir` | Папка для логов | `data\logs` |
 | `default_interval` | Интервал проверки (секунды) | `5` |
-| `ocr_config` | Параметры Tesseract | `--oem 3 --psm 6` |
-| `image_scale` | Масштаб изображения для OCR | `1.5` |
+| `ocr_config` | Параметры Tesseract | `--oem 3 --psm 7` |
+| `image_scale` | Масштаб изображения для OCR | `2.0` |
 
-### 4. Подготовка звукового файла
+### 5. Подготовка звукового файла
 
 Поместите звуковой файл в формате WAV по пути:
 ```
 assets\sounds\sound.wav
 ```
 
-### 5. Проверка конфигурации
+### 6. Проверка конфигурации
 
 Запустите:
 ```cmd
