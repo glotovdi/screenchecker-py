@@ -1,0 +1,10 @@
+{
+    "tesseract_path": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+    "sound_file": "assets\\sounds\\sound.wav",
+    "screenshots_dir": "data\\screenshots",
+    "log_dir": "data\\logs",
+    "default_interval": 5,
+    "ocr_config": "--oem 3 --psm 6",
+    "image_scale": 1.5,
+    "min_confidence": 60
+}
