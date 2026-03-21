@@ -4,6 +4,6 @@
     "log_dir": "data\\logs",
     "default_interval": 5,
     "ocr_config": "--oem 3 --psm 6",
-    "image_scale": 2.0,
+    "image_scale": 6.0,
     "sound_file": ""
 }
