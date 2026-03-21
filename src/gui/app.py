@@ -109,6 +109,19 @@ class ScreenCheckerApp:
                                    textvariable=self.repeat_var)
         repeat_spin.pack(side=tk.LEFT, padx=5)
         
+        ttk.Separator(sound_frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=10)
+        
+        debug_frame = ttk.Frame(top_frame)
+        debug_frame.grid(row=5, column=0, columnspan=4, sticky=tk.W, pady=5)
+        
+        self.debug_save_screenshot = tk.BooleanVar(value=False)
+        ttk.Checkbutton(debug_frame, text="Сохранять скриншот на каждую проверку", 
+                        variable=self.debug_save_screenshot).pack(side=tk.LEFT, padx=5)
+        
+        self.debug_show_text = tk.BooleanVar(value=False)
+        ttk.Checkbutton(debug_frame, text="Показывать распознанный текст", 
+                        variable=self.debug_show_text).pack(side=tk.LEFT, padx=5)
+        
         self.status_label = ttk.Label(
             main_frame, text="Готов к работе", font=("Segoe UI", 10, "bold"))
         self.status_label.pack(pady=10)
@@ -371,6 +384,17 @@ class ScreenCheckerApp:
                     img_array = np.array(screenshot)
                     found, text = self.ocr.find_text(img_array, self.search_text)
                     
+                    if self.debug_save_screenshot.get():
+                        debug_filename = self.save_debug_screenshot(img_array, self.scan_count)
+                        self.log_message(f"[DEBUG] Скриншот #{self.scan_count}: {os.path.basename(debug_filename)}")
+                    
+                    if self.debug_show_text.get():
+                        if text:
+                            self.save_debug_text(self.scan_count, text)
+                            self.log_message(f"[DEBUG] Текст сохранён в файл")
+                        else:
+                            self.log_message(f"[DEBUG] Текст: (пусто)")
+                    
                     if found:
                         self.found_count += 1
                         filename = self.save_screenshot(img_array)
@@ -389,3 +413,21 @@ class ScreenCheckerApp:
                 self.log_message(f"Ошибка: {e}", "error")
                 self.logger.error(f"Ошибка мониторинга: {e}")
                 time.sleep(self.interval)
+    
+    def save_debug_screenshot(self, img_array, count):
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        os.makedirs(self.config['screenshots_dir'], exist_ok=True)
+        filename = f"{self.config['screenshots_dir']}\\debug_{count}_{timestamp}.png"
+        Image.fromarray(img_array).save(filename)
+        return filename
+    
+    def save_debug_text(self, count, text):
+        os.makedirs(self.config['screenshots_dir'], exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{self.config['screenshots_dir']}\\debug_{count}_{timestamp}.txt"
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(f"Скриншот #{count}\n")
+            f.write(f"Время: {timestamp}\n")
+            f.write(f"Искомый текст: {self.search_text}\n")
+            f.write("-" * 50 + "\n")
+            f.write(text)

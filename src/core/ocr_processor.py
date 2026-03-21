@@ -15,24 +15,22 @@ class OCRProcessor:
     def __init__(self):
         self.config = load_config()
         pytesseract.pytesseract.tesseract_cmd = self.config["tesseract_path"]
-        self.tesseract_config = self.config.get("ocr_config", "--oem 3 --psm 7")
+        self.tesseract_config = self.config.get("ocr_config", "--oem 3 --psm 6")
         self.scale = self.config.get("image_scale", 2.0)
     
     def preprocess(self, img_array):
+        if len(img_array.shape) == 3 and img_array.shape[2] == 4:
+            img_array = cv2.cvtColor(img_array, cv2.COLOR_BGRA2BGR)
+        
         gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
         
         processed = cv2.resize(gray, None, fx=self.scale, fy=self.scale, 
                               interpolation=cv2.INTER_CUBIC)
         
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         processed = clahe.apply(processed)
         
-        kernel = np.ones((1, 1), np.uint8)
-        processed = cv2.morphologyEx(processed, cv2.MORPH_CLOSE, kernel)
-        
-        denoised = cv2.fastNlMeansDenoising(processed, None, 10, 7, 21)
-        
-        return denoised
+        return processed
     
     def extract_text(self, img_array):
         processed = self.preprocess(img_array)
@@ -40,7 +38,7 @@ class OCRProcessor:
         text = pytesseract.image_to_string(
             processed,
             lang='rus',
-            config='--oem 3 --psm 7 -c tessedit_char_whitelist=АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя0123456789 .,!?:-'
+            config='--oem 3 --psm 6'
         )
         
         return text.strip()

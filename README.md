@@ -99,6 +99,10 @@ run_console.bat
 4. Выберите звуковой файл и настройте повторы
 5. Нажмите **Старт**
 
+### Режим отладки
+- **Сохранять скриншот на каждую проверку** — все скриншоты сохраняются как `debug_N_timestamp.png`
+- **Показывать распознанный текст** — распознанный текст сохраняется в файл `debug_N_timestamp.txt`
+
 ### Когда текст найден:
 - Воспроизводится звуковое оповещение
 - Сохраняется скриншот экрана в `data/screenshots/`
@@ -120,7 +124,7 @@ run_console.bat
     "screenshots_dir": "data\\screenshots",
     "log_dir": "data\\logs",
     "default_interval": 5,
-    "ocr_config": "--oem 3 --psm 7",
+    "ocr_config": "--oem 3 --psm 6",
     "image_scale": 2.0,
     "sound_file": ""
 }
@@ -133,7 +137,7 @@ run_console.bat
 | `screenshots_dir` | Папка скриншотов | `data\screenshots` |
 | `log_dir` | Папка логов | `data\logs` |
 | `default_interval` | Интервал проверки (сек) | `5` |
-| `ocr_config` | Параметры Tesseract | `--oem 3 --psm 7` |
+| `ocr_config` | Параметры Tesseract | `--oem 3 --psm 6` |
 | `image_scale` | Масштаб для OCR | `2.0` |
 
 ## Логи

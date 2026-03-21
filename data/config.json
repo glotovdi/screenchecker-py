@@ -3,7 +3,7 @@
     "screenshots_dir": "data\\screenshots",
     "log_dir": "data\\logs",
     "default_interval": 5,
-    "ocr_config": "--oem 3 --psm 7",
+    "ocr_config": "--oem 3 --psm 6",
     "image_scale": 2.0,
     "sound_file": ""
 }
