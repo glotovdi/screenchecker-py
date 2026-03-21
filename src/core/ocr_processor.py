@@ -24,13 +24,22 @@ class OCRProcessor:
         
         gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
         
-        processed = cv2.resize(gray, None, fx=self.scale, fy=self.scale, 
-                              interpolation=cv2.INTER_CUBIC)
+        height = gray.shape[0]
+        new_height = max(300, int(height * self.scale * 2))
+        gray = cv2.resize(gray, (int(gray.shape[1] * new_height / height), new_height), 
+                         interpolation=cv2.INTER_CUBIC)
         
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        processed = clahe.apply(processed)
+        clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
+        gray = clahe.apply(gray)
         
-        return processed
+        gray = cv2.medianBlur(gray, 3)
+        
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2))
+        binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+        
+        return binary
     
     def extract_text(self, img_array):
         processed = self.preprocess(img_array)
@@ -57,14 +66,14 @@ class OCRProcessor:
         
         text = pytesseract.image_to_string(
             processed,
-            lang='rus',
-            config='--oem 3 --psm 7'
+            lang='rus+eng',
+            config='--oem 3 --psm 6'
         )
         
         data = pytesseract.image_to_data(
             processed,
-            lang='rus',
-            config='--oem 3 --psm 7',
+            lang='rus+eng',
+            config='--oem 3 --psm 6',
             output_type=pytesseract.Output.DICT
         )
         
