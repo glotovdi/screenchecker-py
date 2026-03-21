@@ -112,7 +112,7 @@ class ConsoleMode:
                 if screenshot:
                     scan_count += 1
                     img_array = np.array(screenshot)
-                    found, text = self.ocr.find_text(img_array, search_text)
+                    found, text, _ = self.ocr.find_text(img_array, search_text)
                     
                     if found:
                         found_count += 1

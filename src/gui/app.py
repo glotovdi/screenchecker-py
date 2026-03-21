@@ -382,7 +382,7 @@ class ScreenCheckerApp:
                 if screenshot:
                     self.scan_count += 1
                     img_array = np.array(screenshot)
-                    found, text = self.ocr.find_text(img_array, self.search_text)
+                    found, text, _ = self.ocr.find_text(img_array, self.search_text)
                     
                     if self.debug_save_screenshot.get():
                         debug_filename = self.save_debug_screenshot(img_array, self.scan_count)
