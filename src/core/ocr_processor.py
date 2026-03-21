@@ -23,10 +23,12 @@ class OCRProcessor:
         self.scale = self.config.get("image_scale", 3.0)
     
     def preprocess(self, img_array):
-        if len(img_array.shape) == 3 and img_array.shape[2] == 4:
-            img_array = cv2.cvtColor(img_array, cv2.COLOR_BGRA2BGR)
-        
-        gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
+        if len(img_array.shape) == 3:
+            if img_array.shape[2] == 4:
+                img_array = cv2.cvtColor(img_array, cv2.COLOR_BGRA2BGR)
+            gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = img_array
         
         gray = cv2.bilateralFilter(gray, 11, 17, 17)
         
