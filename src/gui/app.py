@@ -7,6 +7,7 @@ import time
 import winsound
 import json
 import os
+import cv2
 from datetime import datetime
 from PIL import Image
 
@@ -382,11 +383,13 @@ class ScreenCheckerApp:
                 if screenshot:
                     self.scan_count += 1
                     img_array = np.array(screenshot)
-                    found, text, _ = self.ocr.find_text(img_array, self.search_text)
+                    bw_img = self.make_high_contrast_bw(img_array)
                     
                     if self.debug_save_screenshot.get():
-                        debug_filename = self.save_debug_screenshot(img_array, self.scan_count)
+                        debug_filename = self.save_debug_screenshot(bw_img, self.scan_count)
                         self.log_message(f"[DEBUG] Скриншот #{self.scan_count}: {os.path.basename(debug_filename)}")
+                    
+                    found, text, _ = self.ocr.find_text(bw_img, self.search_text)
                     
                     if self.debug_show_text.get():
                         if text:
@@ -413,6 +416,16 @@ class ScreenCheckerApp:
                 self.log_message(f"Ошибка: {e}", "error")
                 self.logger.error(f"Ошибка мониторинга: {e}")
                 time.sleep(self.interval)
+    
+    def make_high_contrast_bw(self, img_array):
+        gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
+        
+        clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
+        gray = clahe.apply(gray)
+        
+        _, bw = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        
+        return bw
     
     def save_debug_screenshot(self, img_array, count):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
