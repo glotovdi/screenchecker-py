@@ -19,7 +19,7 @@ class OCRProcessor:
     
     def preprocess(self, img_array):
         if len(img_array.shape) == 3 and img_array.shape[2] == 4:
-            img_array = cv2.cvtColor(img_array, cv2.COLOR_BGRA2BGR)
+            img_array = img_array[:, :, :3]
         
         gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
         
