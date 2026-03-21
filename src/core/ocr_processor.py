@@ -37,7 +37,7 @@ class OCRProcessor:
         
         text = pytesseract.image_to_string(
             processed,
-            lang='rus',
+            lang='rus+eng',
             config='--oem 3 --psm 6'
         )
         
